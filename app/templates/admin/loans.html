@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Platform Loan Supervision{% endblock %}
+
+{% block content %}
+<div class="card-header" style="border:none; padding-bottom:0; margin-bottom: 1.5rem;">
+  <div>
+    <h1 style="font-size: 1.85rem; font-weight: 800;">Platform Loan Supervision</h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">Monitor all funded contracts, overdue installments, and open marketplace requests</p>
+  </div>
+</div>
+
+<!-- Active & Completed Loans -->
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Funded Loan Contracts</h3>
+    <div style="display: flex; gap: 0.5rem;">
+      <a href="{{ url_for('admin.loans') }}" class="btn btn-sm {% if not current_status %}btn-primary{% else %}btn-outline{% endif %}">All</a>
+      <a href="{{ url_for('admin.loans', status='Active') }}" class="btn btn-sm {% if current_status == 'Active' %}btn-primary{% else %}btn-outline{% endif %}">Active</a>
+      <a href="{{ url_for('admin.loans', status='Completed') }}" class="btn btn-sm {% if current_status == 'Completed' %}btn-primary{% else %}btn-outline{% endif %}">Completed</a>
+      <a href="{{ url_for('admin.loans', status='Defaulted') }}" class="btn btn-sm {% if current_status == 'Defaulted' %}btn-primary{% else %}btn-outline{% endif %}">Defaulted</a>
+    </div>
+  </div>
+
+  {% if loans %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Loan ID</th>
+            <th>Borrower</th>
+            <th>Title</th>
+            <th>Principal</th>
+            <th>Rate</th>
+            <th>Monthly EMI</th>
+            <th>Installments (Paid / Overdue)</th>
+            <th>Status</th>
+            <th>Term</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for l in loans %}
+            <tr>
+              <td><code>#{{ l.id }}</code></td>
+              <td><strong>{{ l.borrower_name }}</strong></td>
+              <td>{{ l.title }}</td>
+              <td style="font-weight: 700;">{{ l.principal_amount | currency }}</td>
+              <td>{{ l.interest_rate }}%</td>
+              <td>{{ l.monthly_emi | currency }}</td>
+              <td>
+                <span style="color: var(--success); font-weight: 600;">{{ l.paid_installments }} Paid</span>
+                {% if l.overdue_installments > 0 %}
+                  / <span style="color: var(--danger); font-weight: 700;">{{ l.overdue_installments }} Overdue</span>
+                {% endif %}
+              </td>
+              <td><span class="badge badge-{{ l.status | lower }}">{{ l.status }}</span></td>
+              <td style="font-size: 0.85rem; color: var(--text-muted);">
+                {{ l.start_date | date }} to {{ l.end_date | date }}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div style="text-align: center; padding: 2rem 0; color: var(--text-muted);">
+      <p>No loan contracts found.</p>
+    </div>
+  {% endif %}
+</div>
+
+<!-- Open Marketplace Requests -->
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Currently Open Marketplace Requests</h3>
+    <span class="badge badge-open">{{ open_requests | length }} Open</span>
+  </div>
+
+  {% if open_requests %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Request ID</th>
+            <th>Borrower</th>
+            <th>Title</th>
+            <th>Target Amount</th>
+            <th>Funded So Far</th>
+            <th>Funding Progress</th>
+            <th>Rate & Tenure</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in open_requests %}
+            <tr>
+              <td><code>#{{ r.id }}</code></td>
+              <td><strong>{{ r.borrower_name }}</strong></td>
+              <td>{{ r.title }}</td>
+              <td style="font-weight: 700;">{{ r.requested_amount | currency }}</td>
+              <td>{{ r.funded_amount | currency }}</td>
+              <td style="min-width: 140px;">
+                <div class="progress-bar-container">
+                  <div class="progress-bar" style="width: {{ r.funded_percent }}%;"></div>
+                </div>
+                <small>{{ r.funded_percent }}%</small>
+              </td>
+              <td>{{ r.interest_rate }}% ({{ r.tenure_months }} Mo)</td>
+              <td><span class="badge badge-open">Open</span></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div style="text-align: center; padding: 2rem 0; color: var(--text-muted);">
+      <p>No open loan requests waiting for funding.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

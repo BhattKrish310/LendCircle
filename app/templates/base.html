@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}LendCircle{% endblock %} | Peer-to-Peer Lending Platform</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/logo.png') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <!-- KaTeX for Readable Math Equations -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+    onload="renderMathInElement(document.body, {delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]});"></script>
+</head>
+<body>
+  <!-- Navigation Header (Screenshot Style with LendCircle Branding) -->
+  <header class="navbar">
+    <div class="container nav-container">
+      <a href="{{ url_for('main.index') }}" class="brand">
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="LendCircle Logo" class="brand-logo-img">
+        <span>LendCircle</span>
+      </a>
+
+      <button class="mobile-nav-toggle" id="mobile-nav-toggle" aria-label="Toggle navigation">☰</button>
+
+      <ul class="nav-links" id="nav-links">
+        <!-- Buttons requested in screenshot: Lending (with checkmark) & Blog -->
+        <li>
+          <a href="{{ url_for('main.lending') }}" class="nav-link">
+            <span class="lending-check-icon">✓</span>
+            <span>Lending</span>
+          </a>
+        </li>
+        <li>
+          <a href="{{ url_for('main.blog') }}" class="nav-link">Blog</a>
+        </li>
+
+        {% if session.get('user_id') %}
+          {% if session.get('role') == 'borrower' %}
+            <li><a href="{{ url_for('borrower.dashboard') }}" class="nav-link">Dashboard</a></li>
+            <li><a href="{{ url_for('borrower.create_loan') }}" class="nav-link">Request Loan</a></li>
+            <li><a href="{{ url_for('borrower.my_loans') }}" class="nav-link">My Loans</a></li>
+            <li><a href="{{ url_for('borrower.credit_score') }}" class="nav-link">Credit Score</a></li>
+            <li><a href="{{ url_for('borrower.kyc') }}" class="nav-link">KYC</a></li>
+          {% elif session.get('role') == 'lender' %}
+            <li><a href="{{ url_for('lender.dashboard') }}" class="nav-link">Dashboard</a></li>
+            <li><a href="{{ url_for('lender.marketplace') }}" class="nav-link">Marketplace</a></li>
+            <li><a href="{{ url_for('lender.my_investments') }}" class="nav-link">My Investments</a></li>
+            <li><a href="{{ url_for('lender.kyc') }}" class="nav-link">KYC</a></li>
+          {% elif session.get('role') == 'admin' %}
+            <li><a href="{{ url_for('admin.dashboard') }}" class="nav-link">Overview</a></li>
+            <li><a href="{{ url_for('admin.kyc_queue') }}" class="nav-link">KYC Queue</a></li>
+            <li><a href="{{ url_for('admin.users') }}" class="nav-link">Users</a></li>
+            <li><a href="{{ url_for('admin.loans') }}" class="nav-link">Loans</a></li>
+            <li><a href="{{ url_for('admin.risk_flags') }}" class="nav-link">Risk Flags</a></li>
+            <li><a href="{{ url_for('admin.reports') }}" class="nav-link">Reports</a></li>
+          {% endif %}
+          <li><a href="{{ url_for('wallet.index') }}" class="nav-link">Wallet</a></li>
+        {% endif %}
+      </ul>
+
+      <div class="nav-actions">
+        <!-- Theme Toggle -->
+        <button class="theme-toggle-btn" id="theme-toggle-btn" aria-label="Toggle theme">
+          <span id="theme-icon">🌙</span>
+          <span id="theme-label" style="display:none;">Dark</span>
+        </button>
+
+        {% if session.get('user_id') %}
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <a href="{{ url_for('main.profile') }}" class="btn btn-outline btn-sm" title="Profile">
+              👤 {{ session.get('full_name').split()[0] }}
+            </a>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-danger btn-sm">Logout</a>
+          </div>
+        {% else %}
+          <!-- Actions styled as screenshot: Login and Pill Sign Up -->
+          <a href="{{ url_for('auth.login') }}" class="btn-nav-login">Login</a>
+          <a href="{{ url_for('auth.register') }}" class="btn-pill-signup">Sign Up</a>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <!-- Flash Messages -->
+  <main class="main-content">
+    <div class="container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-container">
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }}">
+                <span>{{ message }}</span>
+                <button type="button" onclick="this.parentElement.remove()" style="background:none; border:none; cursor:pointer; font-size:1.1rem; color:inherit;">&times;</button>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+
+  <!-- Footer with Transparent Disclosures -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-content" style="margin-bottom: 1.5rem;">
+        <div style="max-width: 480px;">
+          <div style="display: flex; align-items: center; gap: 0.65rem; margin-bottom: 0.5rem;">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="LendCircle Logo" style="width: 2.25rem; height: 2.25rem; border-radius: 50%; object-fit: contain;">
+            <strong style="font-size: 1.2rem; color: var(--text-main);">LendCircle</strong>
+          </div>
+          <p style="font-size: 0.88rem; color: var(--text-muted); line-height: 1.5;">
+            India's transparent peer-to-peer lending portal connecting credit-assessed borrowers directly with individual lenders.
+          </p>
+        </div>
+        <div>
+          <div style="font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem;">Quick Links</div>
+          <ul style="list-style: none; font-size: 0.88rem; line-height: 2;">
+            <li><a href="{{ url_for('main.lending') }}">Lending Journey & Returns</a></li>
+            <li><a href="{{ url_for('main.blog') }}">Education & Safety Guides</a></li>
+            <li><a href="{{ url_for('auth.login') }}">Account Sign In</a></li>
+            <li><a href="{{ url_for('auth.register') }}">Create Account</a></li>
+          </ul>
+        </div>
+        <div>
+          <div style="font-weight: 700; color: var(--text-main); margin-bottom: 0.5rem;">Database Architecture</div>
+          <p style="font-size: 0.82rem; color: var(--text-muted); line-height: 1.6; max-width: 320px;">
+            Academic DBMS Course Project · 3NF Relational Normalization · Stored Procedures & Triggers · ACID Ledger Guarantees.
+          </p>
+        </div>
+      </div>
+
+      <div style="border-top: 1px solid var(--border-color); padding-top: 1.25rem; font-size: 0.8rem; color: var(--text-muted); line-height: 1.6;">
+        <strong>Important Risk Notice:</strong> Peer-to-Peer lending is an unsecured alternative financial instrument. Loan returns are dependent on individual borrower repayments and are <em>not guaranteed</em>. Capital is not insured by DICGC or government bank schemes. Borrowers and lenders should assess credit risks and diversify appropriately across fractional loans.
+      </div>
+    </div>
+  </footer>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

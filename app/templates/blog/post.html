@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }} | LendCircle Blog{% endblock %}
+
+{% block content %}
+<article class="article-container">
+  <!-- Breadcrumb -->
+  <nav style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1.5rem; display: flex; gap: 0.5rem; align-items: center;">
+    <a href="{{ url_for('main.index') }}" style="color: var(--text-muted);">Home</a>
+    <span>&rsaquo;</span>
+    <a href="{{ url_for('main.blog') }}" style="color: var(--text-muted);">Blog</a>
+    <span>&rsaquo;</span>
+    <span style="color: var(--text-main); font-weight: 600;">{{ post.category }}</span>
+  </nav>
+
+  <header class="article-hero">
+    <div style="display: flex; gap: 0.75rem; align-items: center; margin-bottom: 0.75rem;">
+      <span class="blog-badge">{{ post.category }}</span>
+      <span class="blog-read-time">⏱️ {{ post.read_time }}</span>
+    </div>
+
+    <h1 class="article-title">{{ post.title }}</h1>
+    <p style="font-size: 1.15rem; color: var(--text-muted); line-height: 1.6; margin-top: 0.75rem;">
+      {{ post.summary }}
+    </p>
+  </header>
+
+  <!-- Article Markdown Content -->
+  <div class="article-body card" style="padding: 2.25rem;">
+    {{ post.content | markdown | safe }}
+  </div>
+
+  <!-- Transparent Risk Disclosure Box inside article -->
+  <div class="notice-box" style="margin-top: 2rem;">
+    <strong style="color: var(--navy-main);">Platform Risk Notice:</strong>
+    <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 0.35rem; margin-bottom: 0;">
+      Educational material provided for informational purposes only. Peer-to-peer lending returns depend on borrower repayment behavior and are not guaranteed. LendCircle does not provide investment guarantees or insured credit products.
+    </p>
+  </div>
+
+  <!-- Related Articles -->
+  {% if related %}
+    <section style="margin-top: 3.5rem; border-top: 1px solid var(--border-color); padding-top: 2rem;">
+      <h3 style="font-size: 1.4rem; font-weight: 800; color: var(--text-main); margin-bottom: 1.5rem;">
+        More Guides from LendCircle
+      </h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem;">
+        {% for r in related %}
+          <div class="card" style="margin-bottom: 0; padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <span class="blog-badge" style="font-size: 0.7rem;">{{ r.category }}</span>
+              <h4 style="font-size: 1.05rem; font-weight: 700; margin: 0.6rem 0;">
+                <a href="{{ url_for('main.blog_post', slug=r.slug) }}" style="color: var(--text-main);">{{ r.title }}</a>
+              </h4>
+              <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;">
+                {{ r.summary[:100] }}...
+              </p>
+            </div>
+            <div style="margin-top: 1rem; border-top: 1px solid var(--border-color); padding-top: 0.6rem;">
+              <a href="{{ url_for('main.blog_post', slug=r.slug) }}" style="font-size: 0.85rem; font-weight: 700; color: var(--green-main);">
+                Read Guide &rarr;
+              </a>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    </section>
+  {% endif %}
+</article>
+{% endblock %}

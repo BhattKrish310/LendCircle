@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block title %}Request a Loan{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 1.5rem auto;">
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Create a New Loan Request</h2>
+      <span class="badge badge-info">Direct Marketplace Listing</span>
+    </div>
+
+    <form method="POST" action="{{ url_for('borrower.create_loan') }}">
+      <div class="form-group">
+        <label for="title" class="form-label">Loan Title / Heading</label>
+        <input type="text" id="title" name="title" class="form-control" placeholder="e.g. Higher Education Tuition / Laptop Upgrade / Medical Bills" required>
+        <small class="form-text">A concise headline summarizing your financing need.</small>
+      </div>
+
+      <div class="form-group">
+        <label for="purpose" class="form-label">Detailed Purpose & Plan</label>
+        <textarea id="purpose" name="purpose" class="form-control" rows="3" placeholder="Describe the specific purpose of the loan, why lenders should back you, and your repayment source." required></textarea>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem;">
+        <div class="form-group">
+          <label for="calc-amount" class="form-label">Requested Principal (₹)</label>
+          <input type="number" id="calc-amount" name="requested_amount" class="form-control" placeholder="e.g. 50000" min="1000" max="2000000" step="1000" value="50000" required>
+          <small class="form-text">Min: ₹1,000 · Max: ₹20,00,000</small>
+        </div>
+
+        <div class="form-group">
+          <label for="calc-rate" class="form-label">Offered Interest Rate (% p.a.)</label>
+          <input type="number" id="calc-rate" name="interest_rate" class="form-control" placeholder="e.g. 12.5" min="5.0" max="36.0" step="0.25" value="12.0" required>
+          <small class="form-text">Annual percentage rate offered to investors.</small>
+        </div>
+
+        <div class="form-group">
+          <label for="calc-tenure" class="form-label">Repayment Tenure</label>
+          <select id="calc-tenure" name="tenure_months" class="form-select" required>
+            <option value="3">3 Months</option>
+            <option value="6" selected>6 Months</option>
+            <option value="9">9 Months</option>
+            <option value="12">12 Months (1 Year)</option>
+            <option value="18">18 Months (1.5 Years)</option>
+            <option value="24">24 Months (2 Years)</option>
+            <option value="36">36 Months (3 Years)</option>
+            <option value="48">48 Months (4 Years)</option>
+            <option value="60">60 Months (5 Years)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Real-Time Loan Amortization Preview Card -->
+      <div style="background-color: var(--primary-subtle); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.25rem; margin: 1.5rem 0;">
+        <h4 style="font-size: 0.95rem; font-weight: 700; color: var(--primary); margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em;">
+          Estimated Amortization Preview
+        </h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
+          <div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Estimated Monthly EMI</div>
+            <div id="calc-emi-display" style="font-size: 1.5rem; font-weight: 800; color: var(--text-main);">₹0.00</div>
+          </div>
+          <div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Total Interest Payable</div>
+            <div id="calc-interest-display" style="font-size: 1.25rem; font-weight: 700; color: var(--text-main);">₹0.00</div>
+          </div>
+          <div>
+            <div style="font-size: 0.8rem; color: var(--text-muted);">Total Repayable Amount</div>
+            <div id="calc-total-display" style="font-size: 1.25rem; font-weight: 700; color: var(--text-main);">₹0.00</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 1rem; align-items: center;">
+        <button type="submit" class="btn btn-primary" style="padding: 0.75rem 1.75rem;">
+          Publish Loan Request to Marketplace
+        </button>
+        <a href="{{ url_for('borrower.dashboard') }}" class="btn btn-outline">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

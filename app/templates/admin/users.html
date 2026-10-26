@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}User Directory{% endblock %}
+
+{% block content %}
+<div class="card-header" style="border:none; padding-bottom:0; margin-bottom: 1.5rem;">
+  <div>
+    <h1 style="font-size: 1.85rem; font-weight: 800;">Platform User Directory</h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">Monitor account activity, roles, balances, and manage suspension status</p>
+  </div>
+</div>
+
+<!-- Search & Filters -->
+<div class="card">
+  <form method="GET" action="{{ url_for('admin.users') }}">
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+      <input type="text" name="search" class="form-control" placeholder="Search by name, email, or phone..." value="{{ search }}" style="flex: 2; min-width: 240px;">
+      <select name="role" class="form-select" style="flex: 1; min-width: 140px;">
+        <option value="">All Roles</option>
+        <option value="borrower" {% if role_filter == 'borrower' %}selected{% endif %}>Borrowers Only</option>
+        <option value="lender" {% if role_filter == 'lender' %}selected{% endif %}>Lenders Only</option>
+        <option value="admin" {% if role_filter == 'admin' %}selected{% endif %}>Admins Only</option>
+      </select>
+      <button type="submit" class="btn btn-primary">Search</button>
+      <a href="{{ url_for('admin.users') }}" class="btn btn-outline">Reset</a>
+    </div>
+  </form>
+</div>
+
+<!-- Users Table -->
+<div class="card">
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>User</th>
+          <th>Role</th>
+          <th>Wallet Balance</th>
+          <th>Credit / Investments</th>
+          <th>Registered</th>
+          <th>Account Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+          <tr>
+            <td>
+              <strong>{{ u.full_name }}</strong><br>
+              <small style="color: var(--text-muted);">{{ u.email }} · {{ u.phone }}</small>
+            </td>
+            <td><span class="badge badge-{{ u.role }}">{{ u.role }}</span></td>
+            <td style="font-weight: 600;">{{ (u.balance or 0) | currency }}</td>
+            <td>
+              {% if u.role == 'borrower' %}
+                Score: <strong>{{ u.credit_score or '-' }}</strong>
+                {% if u.risk_category %}
+                  (<span class="badge badge-{{ u.risk_category | lower }}">{{ u.risk_category }}</span>)
+                {% endif %}
+              {% elif u.role == 'lender' %}
+                Invested: <strong>{{ (u.total_invested or 0) | currency }}</strong>
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td style="font-size: 0.85rem; color: var(--text-muted);">
+              {{ u.created_at | date }}
+            </td>
+            <td>
+              <span class="badge badge-{{ u.status | lower }}">{{ u.status }}</span>
+            </td>
+            <td>
+              {% if u.id != session.get('user_id') %}
+                <form method="POST" action="{{ url_for('admin.toggle_user_status', user_id=u.id) }}" onsubmit="return confirm('Change status for {{ u.full_name }}?');">
+                  <button type="submit" class="btn btn-sm {% if u.status == 'active' %}btn-danger{% else %}btn-success{% endif %}">
+                    {% if u.status == 'active' %}Suspend{% else %}Reactivate{% endif %}
+                  </button>
+                </form>
+              {% else %}
+                <span style="font-size: 0.8rem; color: var(--text-muted);">(You)</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

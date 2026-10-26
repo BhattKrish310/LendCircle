@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}KYC Approval Queue{% endblock %}
+
+{% block content %}
+<div class="card-header" style="border:none; padding-bottom:0; margin-bottom: 1.5rem;">
+  <div>
+    <h1 style="font-size: 1.85rem; font-weight: 800;">KYC Document Verification Queue</h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">Review identity documents submitted by borrowers and lenders to grant platform access</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Submissions List</h3>
+    <div style="display: flex; gap: 0.5rem;">
+      <a href="{{ url_for('admin.kyc_queue', status='Pending') }}" class="btn btn-sm {% if current_status == 'Pending' %}btn-primary{% else %}btn-outline{% endif %}">Pending</a>
+      <a href="{{ url_for('admin.kyc_queue', status='Verified') }}" class="btn btn-sm {% if current_status == 'Verified' %}btn-primary{% else %}btn-outline{% endif %}">Verified</a>
+      <a href="{{ url_for('admin.kyc_queue', status='Rejected') }}" class="btn btn-sm {% if current_status == 'Rejected' %}btn-primary{% else %}btn-outline{% endif %}">Rejected</a>
+      <a href="{{ url_for('admin.kyc_queue', status='All') }}" class="btn btn-sm {% if current_status == 'All' %}btn-primary{% else %}btn-outline{% endif %}">All</a>
+    </div>
+  </div>
+
+  {% if kyc_list %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Role</th>
+            <th>Doc Type</th>
+            <th>Doc Number</th>
+            <th>Submitted On</th>
+            <th>Status</th>
+            <th>Admin Remarks</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for k in kyc_list %}
+            <tr>
+              <td>
+                <strong>{{ k.full_name }}</strong><br>
+                <small style="color: var(--text-muted);">{{ k.email }} · {{ k.phone }}</small>
+              </td>
+              <td><span class="badge badge-{{ k.role }}">{{ k.role }}</span></td>
+              <td><strong>{{ k.document_type }}</strong></td>
+              <td><code>{{ k.document_number }}</code></td>
+              <td style="font-size: 0.85rem; color: var(--text-muted);">
+                {{ k.submitted_at | date('%d %b %Y, %H:%M') }}
+              </td>
+              <td><span class="badge badge-{{ k.status | lower }}">{{ k.status }}</span></td>
+              <td style="max-width: 200px; font-size: 0.85rem; color: var(--text-muted);">
+                {{ k.admin_remarks or '-' }}
+                {% if k.reviewer_name %}
+                  <div style="font-size: 0.75rem;">By: {{ k.reviewer_name }}</div>
+                {% endif %}
+              </td>
+              <td style="white-space: nowrap;">
+                {% if k.status == 'Pending' %}
+                  <form method="POST" action="{{ url_for('admin.kyc_action', kyc_id=k.id) }}" style="display: flex; gap: 0.4rem; align-items: center;">
+                    <input type="text" name="remarks" placeholder="Optional remark" class="form-control" style="padding: 0.25rem 0.5rem; font-size: 0.8rem; width: 130px;">
+                    <button type="submit" name="action" value="Verified" class="btn btn-success btn-sm">Approve</button>
+                    <button type="submit" name="action" value="Rejected" class="btn btn-danger btn-sm">Reject</button>
+                  </form>
+                {% else %}
+                  <span style="font-size: 0.85rem; color: var(--text-muted);">Processed</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div style="text-align: center; padding: 2.5rem 0; color: var(--text-muted);">
+      <p>No KYC records matching status "{{ current_status }}".</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

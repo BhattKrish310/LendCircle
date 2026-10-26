@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Loan Marketplace{% endblock %}
+
+{% block content %}
+<div class="card-header" style="border:none; padding-bottom:0; margin-bottom: 1.5rem;">
+  <div>
+    <h1 style="font-size: 1.85rem; font-weight: 800;">Loan Marketplace</h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">Browse and filter verified borrower loan requests. Invest full or fractional amounts.</p>
+  </div>
+</div>
+
+<!-- Filters Card -->
+<div class="card">
+  <form method="GET" action="{{ url_for('lender.marketplace') }}">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; align-items: flex-end;">
+      <div class="form-group" style="margin-bottom: 0;">
+        <label for="min_rate" class="form-label">Min Interest Rate (% p.a.)</label>
+        <input type="number" id="min_rate" name="min_rate" class="form-control" placeholder="e.g. 10.0" step="0.5" value="{{ filters.min_rate }}">
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label for="max_amount" class="form-label">Max Remaining (₹)</label>
+        <input type="number" id="max_amount" name="max_amount" class="form-control" placeholder="e.g. 50000" step="5000" value="{{ filters.max_amount }}">
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label for="tenure" class="form-label">Tenure (Months)</label>
+        <select id="tenure" name="tenure" class="form-select">
+          <option value="">Any Tenure</option>
+          {% for t in [3, 6, 9, 12, 18, 24, 36] %}
+            <option value="{{ t }}" {% if filters.tenure == t %}selected{% endif %}>{{ t }} Months</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="form-group" style="margin-bottom: 0;">
+        <label for="risk_category" class="form-label">Borrower Risk Rating</label>
+        <select id="risk_category" name="risk_category" class="form-select">
+          <option value="">All Ratings</option>
+          <option value="Low" {% if filters.risk_category == 'Low' %}selected{% endif %}>Low Risk</option>
+          <option value="Moderate" {% if filters.risk_category == 'Moderate' %}selected{% endif %}>Moderate Risk</option>
+          <option value="High" {% if filters.risk_category == 'High' %}selected{% endif %}>High Risk</option>
+        </select>
+      </div>
+
+      <div style="display: flex; gap: 0.5rem;">
+        <button type="submit" class="btn btn-primary" style="flex: 1;">Filter</button>
+        <a href="{{ url_for('lender.marketplace') }}" class="btn btn-outline">Reset</a>
+      </div>
+    </div>
+  </form>
+</div>
+
+<!-- Marketplace Listings Grid -->
+{% if requests %}
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem;">
+    {% for req in requests %}
+      <div class="card" style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+            <span class="badge badge-{{ req.risk_category | lower }}">
+              {{ req.risk_category }} Risk · Score {{ req.credit_score }}
+            </span>
+            <span style="font-size: 1.15rem; font-weight: 800; color: var(--success);">
+              {{ req.interest_rate }}% p.a.
+            </span>
+          </div>
+
+          <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.4rem;">
+            <a href="{{ url_for('lender.loan_view', request_id=req.request_id) }}">{{ req.title }}</a>
+          </h3>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.25rem; line-height: 1.5;">
+            {{ req.purpose }}
+          </p>
+
+          <div style="background-color: var(--bg-subtle); padding: 0.85rem; border-radius: var(--radius-sm); margin-bottom: 1.25rem;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; font-size: 0.85rem;">
+              <div>
+                <span style="color: var(--text-muted);">Borrower:</span><br>
+                <strong>{{ req.borrower_name }}</strong>
+              </div>
+              <div>
+                <span style="color: var(--text-muted);">Employment:</span><br>
+                <strong>{{ req.employment_status }}</strong>
+              </div>
+              <div>
+                <span style="color: var(--text-muted);">Total Goal:</span><br>
+                <strong>{{ req.requested_amount | currency }}</strong>
+              </div>
+              <div>
+                <span style="color: var(--text-muted);">Tenure:</span><br>
+                <strong>{{ req.tenure_months }} Months</strong>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 0.25rem;">
+              <span><strong>{{ req.funded_amount | currency }}</strong> funded</span>
+              <span style="color: var(--primary); font-weight: 700;">{{ req.remaining_amount | currency }} needed</span>
+            </div>
+            <div class="progress-bar-container">
+              <div class="progress-bar" style="width: {{ req.funded_percent }}%;"></div>
+            </div>
+            <div style="text-align: right; font-size: 0.8rem; color: var(--text-muted);">{{ req.funded_percent }}% completed</div>
+          </div>
+        </div>
+
+        <a href="{{ url_for('lender.loan_view', request_id=req.request_id) }}" class="btn btn-primary btn-block">
+          Invest in this Loan &rarr;
+        </a>
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="card" style="text-align: center; padding: 3rem 0; color: var(--text-muted);">
+    <p style="font-size: 1.15rem; margin-bottom: 0.5rem;">No open loan requests match your filter criteria.</p>
+    <a href="{{ url_for('lender.marketplace') }}" class="btn btn-outline" style="margin-top: 0.5rem;">Clear Filters</a>
+  </div>
+{% endif %}
+{% endblock %}

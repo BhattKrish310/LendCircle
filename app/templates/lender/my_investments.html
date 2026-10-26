@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}My Portfolio & Investments{% endblock %}
+
+{% block content %}
+<div class="card-header" style="border:none; padding-bottom:0; margin-bottom: 1.5rem;">
+  <div>
+    <h1 style="font-size: 1.85rem; font-weight: 800;">My Investment Portfolio</h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">Track all funded loans, repayments received, and performance yields</p>
+  </div>
+  <div>
+    <a href="{{ url_for('lender.marketplace') }}" class="btn btn-primary">+ Invest in Marketplace</a>
+  </div>
+</div>
+
+{% if portfolio %}
+<div class="metrics-grid">
+  <div class="metric-card">
+    <div class="metric-label">Total Capital Invested</div>
+    <div class="metric-value">{{ portfolio.total_invested | currency }}</div>
+    <div class="metric-subtext">Across {{ portfolio.total_investments_made }} investments</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-label">Total Returns Realized</div>
+    <div class="metric-value" style="color: var(--success);">{{ portfolio.total_earned | currency }}</div>
+    <div class="metric-subtext">Received into your digital wallet</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-label">Funded Contracts</div>
+    <div class="metric-value">{{ portfolio.funded_requests_count }}</div>
+    <div class="metric-subtext">Distinct loan requests backed</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-label">Available Wallet Balance</div>
+    <div class="metric-value">{{ portfolio.wallet_balance | currency }}</div>
+    <div class="metric-subtext"><a href="{{ url_for('wallet.index') }}">Go to wallet &rarr;</a></div>
+  </div>
+</div>
+{% endif %}
+
+<!-- Investments Detailed Table -->
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Portfolio Holdings</h3>
+  </div>
+
+  {% if investments %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Loan Title</th>
+            <th>Your Investment</th>
+            <th>Interest Rate</th>
+            <th>Date Funded</th>
+            <th>Request Status</th>
+            <th>Contract Status</th>
+            <th>Returns Realized</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for inv in investments %}
+            <tr>
+              <td>
+                <strong>{{ inv.title }}</strong><br>
+                <small style="color: var(--text-muted);">Goal: {{ inv.requested_amount | currency }} ({{ inv.tenure_months }} Mo)</small>
+              </td>
+              <td style="font-weight: 700;">{{ inv.amount | currency }}</td>
+              <td style="color: var(--success); font-weight: 600;">{{ inv.interest_rate }}% p.a.</td>
+              <td style="font-size: 0.85rem; color: var(--text-muted);">
+                {{ inv.funded_at | date('%d %b %Y, %H:%M') }}
+              </td>
+              <td>
+                <span class="badge badge-{{ inv.request_status | lower }}">{{ inv.request_status }}</span>
+              </td>
+              <td>
+                {% if inv.loan_status %}
+                  <span class="badge badge-{{ inv.loan_status | lower }}">{{ inv.loan_status }}</span>
+                {% else %}
+                  <span style="color: var(--text-muted); font-size: 0.85rem;">Funding In Progress</span>
+                {% endif %}
+              </td>
+              <td style="font-weight: 700; color: var(--success);">
+                {{ inv.returns_received | currency }}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div style="text-align: center; padding: 2.5rem 0; color: var(--text-muted);">
+      <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">You have not made any investments yet.</p>
+      <a href="{{ url_for('lender.marketplace') }}" class="btn btn-primary" style="margin-top: 0.5rem;">Explore Marketplace</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

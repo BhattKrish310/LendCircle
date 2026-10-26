@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Borrower Dashboard{% endblock %}
+
+{% block content %}
+<div class="card-header" style="border:none; padding-bottom:0; margin-bottom: 1.5rem;">
+  <div>
+    <h1 style="font-size: 1.85rem; font-weight: 800;">Welcome, {{ session.get('full_name') }}</h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">Track your loan status, credit score, and upcoming EMI installments</p>
+  </div>
+  <div>
+    <a href="{{ url_for('borrower.create_loan') }}" class="btn btn-primary">+ Request a New Loan</a>
+  </div>
+</div>
+
+<!-- Key Stat Cards -->
+<div class="metrics-grid">
+  <div class="metric-card">
+    <div class="metric-label">Digital Wallet Balance</div>
+    <div class="metric-value">{{ wallet.balance | currency }}</div>
+    <div class="metric-subtext">
+      <a href="{{ url_for('wallet.index') }}">Deposit or withdraw &rarr;</a>
+    </div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-label">Credit Score</div>
+    <div class="metric-value" style="color: {% if profile.credit_score >= 750 %}var(--success){% elif profile.credit_score >= 600 %}var(--warning){% else %}var(--danger){% endif %};">
+      {{ profile.credit_score }}
+    </div>
+    <div class="metric-subtext">
+      <span class="badge badge-{{ profile.risk_category | lower }}">Risk: {{ profile.risk_category }}</span>
+      <a href="{{ url_for('borrower.credit_score') }}" style="margin-left: 0.5rem;">View History &rarr;</a>
+    </div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-label">KYC Verification Status</div>
+    <div class="metric-value" style="font-size: 1.4rem; padding-top: 0.35rem;">
+      {% if kyc and kyc.status == 'Verified' %}
+        <span class="badge badge-success" style="font-size: 0.9rem;">Verified</span>
+      {% elif kyc and kyc.status == 'Pending' %}
+        <span class="badge badge-warning" style="font-size: 0.9rem;">Pending Approval</span>
+      {% elif kyc and kyc.status == 'Rejected' %}
+        <span class="badge badge-danger" style="font-size: 0.9rem;">Rejected</span>
+      {% else %}
+        <span class="badge badge-warning" style="font-size: 0.9rem;">Not Submitted</span>
+      {% endif %}
+    </div>
+    <div class="metric-subtext">
+      <a href="{{ url_for('borrower.kyc') }}">Update KYC documents &rarr;</a>
+    </div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-label">Active Loans Count</div>
+    <div class="metric-value">{{ active_loans | length }}</div>
+    <div class="metric-subtext">
+      <a href="{{ url_for('borrower.my_loans') }}">View all loans &rarr;</a>
+    </div>
+  </div>
+</div>
+
+<!-- Upcoming & Overdue EMI Section -->
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Upcoming & Due EMI Payments</h3>
+    <span style="font-size: 0.85rem; color: var(--text-muted);">Pay directly from your wallet balance</span>
+  </div>
+
+  {% if upcoming_emis %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Loan Title</th>
+            <th>Installment #</th>
+            <th>Due Date</th>
+            <th>Base EMI</th>
+            <th>Late Penalty</th>
+            <th>Total Due</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for emi in upcoming_emis %}
+            <tr>
+              <td>
+                <a href="{{ url_for('borrower.loan_details', loan_id=emi.loan_id) }}" style="font-weight: 600;">
+                  {{ emi.title }}
+                </a>
+              </td>
+              <td>Installment #{{ emi.installment_number }}</td>
+              <td>
+                <strong {% if emi.status == 'Overdue' %}style="color: var(--danger);"{% endif %}>
+                  {{ emi.due_date | date }}
+                </strong>
+              </td>
+              <td>{{ emi.emi_amount | currency }}</td>
+              <td style="color: var(--danger);">
+                {% if emi.penalty_amount > 0 %}{{ emi.penalty_amount | currency }}{% else %}-{% endif %}
+              </td>
+              <td style="font-weight: 700; color: var(--text-main);">
+                {{ (emi.emi_amount + emi.penalty_amount) | currency }}
+              </td>
+              <td>
+                <span class="badge badge-{{ emi.status | lower }}">{{ emi.status }}</span>
+              </td>
+              <td>
+                <form method="POST" action="{{ url_for('borrower.pay_emi', schedule_id=emi.id) }}" onsubmit="return confirm('Confirm paying this EMI from your digital wallet balance?');">
+                  <button type="submit" class="btn btn-sm {% if emi.status == 'Overdue' %}btn-danger{% else %}btn-primary{% endif %}" {% if wallet.balance < (emi.emi_amount + emi.penalty_amount) %}disabled title="Insufficient wallet balance"{% endif %}>
+                    Pay Now
+                  </button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div style="text-align: center; padding: 2rem 0; color: var(--text-muted);">
+      <p>🎉 All your loan payments are completely up to date!</p>
+    </div>
+  {% endif %}
+</div>
+
+<!-- Open Loan Requests in Marketplace -->
+{% if open_requests %}
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">My Open Loan Requests</h3>
+    <span class="badge badge-open">Marketplace Active</span>
+  </div>
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Loan Request</th>
+          <th>Requested</th>
+          <th>Funded So Far</th>
+          <th>Funding Progress</th>
+          <th>Interest Rate</th>
+          <th>Tenure</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for req in open_requests %}
+          <tr>
+            <td>
+              <strong>{{ req.title }}</strong><br>
+              <small style="color: var(--text-muted);">{{ req.purpose }}</small>
+            </td>
+            <td>{{ req.requested_amount | currency }}</td>
+            <td>{{ req.funded_amount | currency }}</td>
+            <td style="min-width: 160px;">
+              <div class="progress-bar-container">
+                <div class="progress-bar" style="width: {{ req.funded_percent }}%;"></div>
+              </div>
+              <small style="font-weight: 600;">{{ req.funded_percent }}% funded</small>
+            </td>
+            <td>{{ req.interest_rate }}% p.a.</td>
+            <td>{{ req.tenure_months }} Months</td>
+            <td>
+              <form method="POST" action="{{ url_for('borrower.cancel_loan_request', request_id=req.id) }}" onsubmit="return confirm('Cancel this loan request? Any invested funds will be refunded to lenders.');">
+                <button type="submit" class="btn btn-danger btn-sm" style="padding: 0.25rem 0.65rem; font-size: 0.8rem;">
+                  Cancel
+                </button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

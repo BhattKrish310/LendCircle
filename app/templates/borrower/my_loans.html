@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}My Loans & Requests{% endblock %}
+
+{% block content %}
+<div class="card-header" style="border:none; padding-bottom:0; margin-bottom: 1.5rem;">
+  <div>
+    <h1 style="font-size: 1.85rem; font-weight: 800;">My Loans & Requests</h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">Track funded contracts, active repayment schedules, and marketplace requests</p>
+  </div>
+  <div>
+    <a href="{{ url_for('borrower.create_loan') }}" class="btn btn-primary">+ New Request</a>
+  </div>
+</div>
+
+<!-- Active and Past Loans -->
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Funded Loans</h3>
+  </div>
+
+  {% if loans %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Loan ID</th>
+            <th>Title & Purpose</th>
+            <th>Principal</th>
+            <th>Rate</th>
+            <th>Monthly EMI</th>
+            <th>Installments</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for loan in loans %}
+            <tr>
+              <td><code>#{{ loan.id }}</code></td>
+              <td>
+                <strong>{{ loan.title }}</strong><br>
+                <small style="color: var(--text-muted);">{{ loan.purpose }}</small>
+              </td>
+              <td>{{ loan.principal_amount | currency }}</td>
+              <td>{{ loan.interest_rate }}%</td>
+              <td style="font-weight: 700;">{{ loan.monthly_emi | currency }}</td>
+              <td>
+                <span style="color: var(--success); font-weight: 600;">{{ loan.paid_installments }} paid</span> /
+                <span>{{ loan.tenure_months }} total</span>
+                {% if loan.overdue_installments > 0 %}
+                  <br><span style="color: var(--danger); font-size: 0.8rem; font-weight: 700;">{{ loan.overdue_installments }} OVERDUE</span>
+                {% endif %}
+              </td>
+              <td>
+                <span class="badge badge-{{ loan.status | lower }}">{{ loan.status }}</span>
+              </td>
+              <td>
+                <a href="{{ url_for('borrower.loan_details', loan_id=loan.id) }}" class="btn btn-outline btn-sm">
+                  View Schedule &rarr;
+                </a>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div style="text-align: center; padding: 2rem 0; color: var(--text-muted);">
+      <p>No funded loans yet.</p>
+    </div>
+  {% endif %}
+</div>
+
+<!-- Marketplace Requests Table -->
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Marketplace Funding Requests</h3>
+  </div>
+
+  {% if requests %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Request ID</th>
+            <th>Title</th>
+            <th>Requested</th>
+            <th>Funded</th>
+            <th>Progress</th>
+            <th>Interest Rate</th>
+            <th>Tenure</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for req in requests %}
+            <tr>
+              <td><code>#{{ req.id }}</code></td>
+              <td>
+                <strong>{{ req.title }}</strong><br>
+                <small style="color: var(--text-muted);">{{ req.purpose }}</small>
+              </td>
+              <td>{{ req.requested_amount | currency }}</td>
+              <td>{{ req.funded_amount | currency }}</td>
+              <td style="min-width: 140px;">
+                <div class="progress-bar-container">
+                  <div class="progress-bar" style="width: {{ req.funded_percent }}%;"></div>
+                </div>
+                <small>{{ req.funded_percent }}% funded</small>
+              </td>
+              <td>{{ req.interest_rate }}%</td>
+              <td>{{ req.tenure_months }} Mo</td>
+              <td>
+                <span class="badge badge-{{ req.status | lower }}">{{ req.status }}</span>
+              </td>
+              <td>
+                {% if req.status == 'Open' %}
+                  <form method="POST" action="{{ url_for('borrower.cancel_loan_request', request_id=req.id) }}" onsubmit="return confirm('Are you sure you want to cancel this loan request? Any partial funds invested by lenders will be immediately refunded.');">
+                    <button type="submit" class="btn btn-danger btn-sm" style="padding: 0.25rem 0.65rem; font-size: 0.8rem;">
+                      Cancel Request
+                    </button>
+                  </form>
+                {% else %}
+                  <span style="font-size: 0.8rem; color: var(--text-muted);">-</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div style="text-align: center; padding: 2rem 0; color: var(--text-muted);">
+      <p>You have not created any loan requests yet.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

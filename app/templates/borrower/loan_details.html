@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Loan #{{ loan.id }} Schedule{% endblock %}
+
+{% block content %}
+<div class="card-header" style="border:none; padding-bottom:0; margin-bottom: 1.5rem;">
+  <div>
+    <h1 style="font-size: 1.85rem; font-weight: 800;">Loan Details & Repayment Amortization</h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">Contract: <strong>{{ loan.title }}</strong> (Loan #{{ loan.id }})</p>
+  </div>
+  <div>
+    <a href="{{ url_for('borrower.my_loans') }}" class="btn btn-outline">&larr; Back to My Loans</a>
+  </div>
+</div>
+
+<div class="metrics-grid">
+  <div class="metric-card">
+    <div class="metric-label">Principal Amount</div>
+    <div class="metric-value">{{ loan.principal_amount | currency }}</div>
+    <div class="metric-subtext">Original disbursed balance</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-label">Monthly EMI</div>
+    <div class="metric-value" style="color: var(--primary);">{{ loan.monthly_emi | currency }}</div>
+    <div class="metric-subtext">{{ loan.tenure_months }} monthly installments</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-label">Total Repayable</div>
+    <div class="metric-value">{{ loan.total_repayable | currency }}</div>
+    <div class="metric-subtext">Interest rate: {{ loan.interest_rate }}% p.a.</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-label">Contract Status</div>
+    <div class="metric-value" style="font-size: 1.5rem; padding-top: 0.25rem;">
+      <span class="badge badge-{{ loan.status | lower }}">{{ loan.status }}</span>
+    </div>
+    <div class="metric-subtext">Term: {{ loan.start_date | date }} to {{ loan.end_date | date }}</div>
+  </div>
+</div>
+
+<!-- Amortization Schedule Table -->
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Full EMI Amortization Schedule</h3>
+    <span style="font-size: 0.85rem; color: var(--text-muted);">
+      Wallet Balance: <strong>{{ wallet.balance | currency }}</strong>
+      (<a href="{{ url_for('wallet.index') }}">Add funds</a>)
+    </span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Inst #</th>
+          <th>Due Date</th>
+          <th>Principal Part</th>
+          <th>Interest Part</th>
+          <th>Base EMI</th>
+          <th>Late Penalty</th>
+          <th>Total Payable</th>
+          <th>Status</th>
+          <th>Repayment Date</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in schedule %}
+          <tr {% if row.status == 'Overdue' %}style="background-color: var(--danger-subtle);"{% endif %}>
+            <td><strong>#{{ row.installment_number }}</strong></td>
+            <td>
+              <span {% if row.status == 'Overdue' %}style="color: var(--danger); font-weight: 700;"{% endif %}>
+                {{ row.due_date | date }}
+              </span>
+            </td>
+            <td>{{ row.principal_component | currency }}</td>
+            <td>{{ row.interest_component | currency }}</td>
+            <td>{{ row.emi_amount | currency }}</td>
+            <td style="color: var(--danger);">
+              {% if row.penalty_amount > 0 %}
+                {{ row.penalty_amount | currency }}
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td style="font-weight: 700; color: var(--text-main);">
+              {{ (row.emi_amount + row.penalty_amount) | currency }}
+            </td>
+            <td>
+              <span class="badge badge-{{ row.status | lower }}">{{ row.status }}</span>
+            </td>
+            <td style="font-size: 0.85rem; color: var(--text-muted);">
+              {% if row.paid_at %}
+                {{ row.paid_at | date('%d %b %Y, %H:%M') }}
+              {% else %}
+                -
+              {% endif %}
+            </td>
+            <td>
+              {% if row.status in ['Pending', 'Overdue'] %}
+                <form method="POST" action="{{ url_for('borrower.pay_emi', schedule_id=row.id) }}" onsubmit="return confirm('Confirm paying installment #{{ row.installment_number }}?');">
+                  <button type="submit" class="btn btn-sm {% if row.status == 'Overdue' %}btn-danger{% else %}btn-primary{% endif %}" {% if wallet.balance < (row.emi_amount + row.penalty_amount) %}disabled title="Insufficient wallet balance"{% endif %}>
+                    Pay Now
+                  </button>
+                </form>
+              {% else %}
+                <span style="color: var(--success); font-weight: 600;">✓ Settled</span>
+              {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

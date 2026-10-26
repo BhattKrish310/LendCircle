@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+
+{% block title %}KYC Verification{% endblock %}
+
+{% block content %}
+<div style="max-width: 650px; margin: 1.5rem auto;">
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">KYC Document Verification</h2>
+      {% if kyc %}
+        <span class="badge badge-{{ kyc.status | lower }}">{{ kyc.status }}</span>
+      {% else %}
+        <span class="badge badge-warning">Action Required</span>
+      {% endif %}
+    </div>
+
+    {% if kyc and kyc.status == 'Verified' %}
+      <div class="alert alert-success">
+        <div>
+          <strong>✓ Identity Verified!</strong><br>
+          Your {{ kyc.document_type }} (<code>{{ kyc.document_number }}</code>) has been approved by admin. You can now post loan requests freely.
+        </div>
+      </div>
+    {% elif kyc and kyc.status == 'Pending' %}
+      <div class="alert alert-warning">
+        <div>
+          <strong>⏳ Under Review</strong><br>
+          Your {{ kyc.document_type }} submission is currently queued for administrator review.
+        </div>
+      </div>
+    {% elif kyc and kyc.status == 'Rejected' %}
+      <div class="alert alert-danger">
+        <div>
+          <strong>✗ Submission Rejected</strong><br>
+          Reason: {{ kyc.admin_remarks or 'Document details could not be validated.' }}<br>
+          Please resubmit your document below.
+        </div>
+      </div>
+    {% endif %}
+
+    {% if not kyc or kyc.status in ['Rejected', 'Pending'] %}
+      <form method="POST" action="{{ url_for('borrower.kyc') }}">
+        <div class="form-group">
+          <label for="document_type" class="form-label">Government ID Type</label>
+          <select id="document_type" name="document_type" class="form-select" required>
+            <option value="Aadhaar">Aadhaar Card</option>
+            <option value="PAN">PAN Card</option>
+            <option value="Passport">Passport</option>
+            <option value="Driving License">Driving License</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="document_number" class="form-label">Document Identification Number</label>
+          <input type="text" id="document_number" name="document_number" class="form-control" placeholder="e.g. 1234-5678-9012 or ABCDE1234F" required>
+          <small class="form-text">Enter the exact identification number as printed on your ID card.</small>
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">
+          Submit KYC for Review
+        </button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

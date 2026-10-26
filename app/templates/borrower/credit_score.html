@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Credit Score & History{% endblock %}
+
+{% block content %}
+<div class="card-header" style="border:none; padding-bottom:0; margin-bottom: 1.5rem;">
+  <div>
+    <h1 style="font-size: 1.85rem; font-weight: 800;">Credit Score & Audit History</h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">Understand your peer lending creditworthiness and score trajectory</p>
+  </div>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+  <!-- Score Gauge Card -->
+  <div class="card" style="text-align: center;">
+    <h3 class="card-title" style="margin-bottom: 0.5rem;">Current Credit Score</h3>
+    <div class="credit-score-gauge">
+      <div class="score-number" style="color: {% if profile.credit_score >= 750 %}var(--success){% elif profile.credit_score >= 600 %}var(--warning){% else %}var(--danger){% endif %};">
+        {{ profile.credit_score }}
+      </div>
+      <div class="score-badge badge-{{ profile.risk_category | lower }}">
+        Risk Rating: {{ profile.risk_category }}
+      </div>
+      <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted);">
+        Scale: 300 (Poor) to 900 (Excellent)
+      </div>
+    </div>
+  </div>
+
+  <!-- How Score Changes Explanation Card -->
+  <div class="card">
+    <h3 class="card-title" style="margin-bottom: 1rem;">Credit Score Rules</h3>
+    <ul style="color: var(--text-muted); font-size: 0.92rem; line-height: 1.8; margin-left: 1.25rem;">
+      <li><strong style="color: var(--success);">+10 Points:</strong> Each on-time EMI payment settled from your wallet.</li>
+      <li><strong style="color: var(--info);">+5 Points:</strong> Settling a previously overdue installment.</li>
+      <li><strong style="color: var(--danger);">-25 Points:</strong> Each day an installment passes its due date without payment.</li>
+      <li><strong style="color: var(--warning);">Risk Category:</strong>
+        Score &ge; 750 is <em>Low Risk</em>; 600–749 is <em>Moderate Risk</em>; below 600 is <em>High Risk</em>.
+      </li>
+    </ul>
+  </div>
+</div>
+
+<!-- Score Audit Log Table -->
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Score Adjustment History (Audit Trail)</h3>
+  </div>
+
+  {% if history %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Date & Time</th>
+            <th>Previous Score</th>
+            <th>New Score</th>
+            <th>Point Delta</th>
+            <th>Reason / Event Trigger</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for h in history %}
+            {% set delta = h.new_score - h.previous_score %}
+            <tr>
+              <td style="color: var(--text-muted); font-size: 0.85rem;">
+                {{ h.changed_at | date('%d %b %Y, %H:%M') }}
+              </td>
+              <td>{{ h.previous_score }}</td>
+              <td style="font-weight: 700; color: var(--text-main);">{{ h.new_score }}</td>
+              <td>
+                <span class="badge {% if delta > 0 %}badge-success{% elif delta < 0 %}badge-danger{% else %}badge-info{% endif %}">
+                  {% if delta > 0 %}+{% endif %}{{ delta }}
+                </span>
+              </td>
+              <td>{{ h.change_reason }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div style="text-align: center; padding: 2rem 0; color: var(--text-muted);">
+      <p>No score adjustments recorded yet. Pay your EMIs on time to build your score!</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

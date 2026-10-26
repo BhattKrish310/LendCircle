@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Risk Supervision & Fraud Monitoring{% endblock %}
+
+{% block content %}
+<div class="card-header" style="border:none; padding-bottom:0; margin-bottom: 1.5rem;">
+  <div>
+    <h1 style="font-size: 1.85rem; font-weight: 800;">Risk Flags & Underwriting Alerts</h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">System-generated and rule-based triggers for multiple overdue EMIs and debt-to-income spikes</p>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Risk Flags</h3>
+    <div style="display: flex; gap: 0.5rem;">
+      <a href="{{ url_for('admin.risk_flags', status='Open') }}" class="btn btn-sm {% if current_status == 'Open' %}btn-primary{% else %}btn-outline{% endif %}">Open</a>
+      <a href="{{ url_for('admin.risk_flags', status='Reviewed') }}" class="btn btn-sm {% if current_status == 'Reviewed' %}btn-primary{% else %}btn-outline{% endif %}">Reviewed</a>
+      <a href="{{ url_for('admin.risk_flags', status='Dismissed') }}" class="btn btn-sm {% if current_status == 'Dismissed' %}btn-primary{% else %}btn-outline{% endif %}">Dismissed</a>
+    </div>
+  </div>
+
+  {% if flags %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Severity</th>
+            <th>Flag Type</th>
+            <th>User</th>
+            <th>Description & Audit Context</th>
+            <th>Created At</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for f in flags %}
+            <tr>
+              <td><span class="badge badge-{{ f.severity | lower }}">{{ f.severity }}</span></td>
+              <td><code>{{ f.flag_type }}</code></td>
+              <td>
+                <strong>{{ f.user_name }}</strong><br>
+                <small style="color: var(--text-muted);">{{ f.user_role }} · {{ f.user_email }}</small>
+              </td>
+              <td style="max-width: 320px;">
+                {{ f.description }}
+                {% if f.reviewer_name %}
+                  <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">
+                    Reviewed by {{ f.reviewer_name }} on {{ f.reviewed_at | date }}
+                  </div>
+                {% endif %}
+              </td>
+              <td style="font-size: 0.85rem; color: var(--text-muted);">
+                {{ f.created_at | date('%d %b %Y, %H:%M') }}
+              </td>
+              <td><span class="badge badge-{{ f.status | lower }}">{{ f.status }}</span></td>
+              <td>
+                {% if f.status == 'Open' %}
+                  <div style="display: flex; gap: 0.4rem;">
+                    <form method="POST" action="{{ url_for('admin.update_risk_flag', flag_id=f.id) }}">
+                      <input type="hidden" name="status" value="Reviewed">
+                      <button type="submit" class="btn btn-sm btn-outline">Review</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('admin.update_risk_flag', flag_id=f.id) }}">
+                      <input type="hidden" name="status" value="Dismissed">
+                      <button type="submit" class="btn btn-sm btn-outline">Dismiss</button>
+                    </form>
+                  </div>
+                {% else %}
+                  <span style="font-size: 0.8rem; color: var(--text-muted);">Action taken</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div style="text-align: center; padding: 2.5rem 0; color: var(--text-muted);">
+      <p>No risk flags found with status "{{ current_status }}".</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

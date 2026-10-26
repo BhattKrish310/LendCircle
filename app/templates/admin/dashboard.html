@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Control Panel{% endblock %}
+
+{% block content %}
+<div class="card-header" style="border:none; padding-bottom:0; margin-bottom: 1.5rem;">
+  <div>
+    <h1 style="font-size: 1.85rem; font-weight: 800;">Platform Administrator Control Panel</h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">System-wide operations, KYC approvals, credit risk supervision, and financial ledger audits</p>
+  </div>
+  <div style="display: flex; gap: 0.5rem;">
+    <form method="POST" action="{{ url_for('admin.refresh_metrics') }}">
+      <button type="submit" class="btn btn-outline btn-sm" title="Execute Stored Procedures sp_check_and_mark_overdue and sp_refresh_platform_metrics">
+        🔄 Refresh Metrics & Check Overdue
+      </button>
+    </form>
+    <a href="{{ url_for('admin.reports') }}" class="btn btn-primary btn-sm">Analytics Reports &rarr;</a>
+  </div>
+</div>
+
+<!-- Primary System Metrics -->
+{% if metrics %}
+<div class="metrics-grid">
+  <div class="metric-card">
+    <div class="metric-label">Total Users</div>
+    <div class="metric-value">{{ metrics.total_users }}</div>
+    <div class="metric-subtext">{{ metrics.total_borrowers }} Borrowers · {{ metrics.total_lenders }} Lenders</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-label">Active Loans Volume</div>
+    <div class="metric-value">{{ metrics.total_disbursed | currency }}</div>
+    <div class="metric-subtext">{{ metrics.total_active_loans }} currently active loans</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-label">Total Capital Repaid</div>
+    <div class="metric-value" style="color: var(--success);">{{ metrics.total_repaid | currency }}</div>
+    <div class="metric-subtext">Principal + interest collected</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-label">Overdue Installments</div>
+    <div class="metric-value" style="color: {% if metrics.total_overdue_count > 0 %}var(--danger){% else %}var(--success){% endif %};">
+      {{ metrics.total_overdue_count }}
+    </div>
+    <div class="metric-subtext">{{ metrics.open_risk_flags_count }} Open Risk Flags</div>
+  </div>
+</div>
+{% endif %}
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+  <!-- Pending KYC Queue Preview -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Pending KYC Queue</h3>
+      <a href="{{ url_for('admin.kyc_queue') }}" class="btn btn-sm btn-outline">View All ({{ pending_kyc | length }}) &rarr;</a>
+    </div>
+
+    {% if pending_kyc %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Role</th>
+              <th>Document</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for k in pending_kyc %}
+              <tr>
+                <td>
+                  <strong>{{ k.full_name }}</strong><br>
+                  <small style="color: var(--text-muted);">{{ k.email }}</small>
+                </td>
+                <td><span class="badge badge-{{ k.role }}">{{ k.role }}</span></td>
+                <td>{{ k.document_type }}</td>
+                <td>
+                  <a href="{{ url_for('admin.kyc_queue') }}" class="btn btn-sm btn-primary">Review</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div style="text-align: center; padding: 1.5rem 0; color: var(--text-muted);">
+        <p>✓ All KYC submissions have been processed.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- Open Risk Flags Preview -->
+  <div class="card">
+    <div class="card-header">
+      <h3 class="card-title">Open Risk Flags</h3>
+      <a href="{{ url_for('admin.risk_flags') }}" class="btn btn-sm btn-outline">Review Flags &rarr;</a>
+    </div>
+
+    {% if recent_flags %}
+      <div class="table-responsive">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Severity</th>
+              <th>User</th>
+              <th>Flag Type</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for f in recent_flags %}
+              <tr>
+                <td><span class="badge badge-{{ f.severity | lower }}">{{ f.severity }}</span></td>
+                <td>
+                  <strong>{{ f.user_name }}</strong><br>
+                  <small style="color: var(--text-muted);">{{ f.user_role }}</small>
+                </td>
+                <td><code>{{ f.flag_type }}</code></td>
+                <td>
+                  <a href="{{ url_for('admin.risk_flags') }}" class="btn btn-sm btn-danger">Inspect</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div style="text-align: center; padding: 1.5rem 0; color: var(--text-muted);">
+        <p>✓ Zero open risk flags currently detected.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Recent Originated Loans -->
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Recently Originated Loans</h3>
+    <a href="{{ url_for('admin.loans') }}" class="btn btn-sm btn-outline">All Loans &rarr;</a>
+  </div>
+
+  {% if recent_loans %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Loan ID</th>
+            <th>Borrower</th>
+            <th>Title</th>
+            <th>Principal</th>
+            <th>Monthly EMI</th>
+            <th>Status</th>
+            <th>Origination Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for l in recent_loans %}
+            <tr>
+              <td><code>#{{ l.id }}</code></td>
+              <td><strong>{{ l.borrower_name }}</strong></td>
+              <td>{{ l.title }}</td>
+              <td>{{ l.principal_amount | currency }}</td>
+              <td>{{ l.monthly_emi | currency }}</td>
+              <td><span class="badge badge-{{ l.status | lower }}">{{ l.status }}</span></td>
+              <td style="color: var(--text-muted); font-size: 0.85rem;">{{ l.start_date | date }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div style="text-align: center; padding: 2rem 0; color: var(--text-muted);">
+      <p>No originated loans recorded.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

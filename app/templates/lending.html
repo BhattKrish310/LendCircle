@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}Lending Overview & Investor Journey | LendCircle{% endblock %}
+
+{% block content %}
+<!-- Lending Hero Section -->
+<section class="hero-wrapper" style="padding-top: 1.5rem;">
+  <div class="hero-grid">
+    <div>
+      <div class="hero-tag">
+        <span class="lending-check-icon" style="border-color: currentColor;">✓</span> Direct Peer Lending
+      </div>
+      <h1 class="hero-title">
+        Lend Directly to Verified Borrowers Across India
+      </h1>
+      <p class="hero-desc">
+        Diversify your capital across peer-to-peer loan requests. Earn monthly amortized repayments of principal and interest without middleman bank margins.
+      </p>
+
+      <div class="hero-cta-group">
+        <a href="{{ url_for('auth.register') }}" class="btn btn-cta-invest">
+          💰 Start Lending
+        </a>
+        <a href="{{ url_for('lender.marketplace') if session.get('role') == 'lender' else url_for('auth.login') }}" class="btn btn-cta-market">
+          Browse Live Requests &rarr;
+        </a>
+      </div>
+
+      <div style="font-size: 0.82rem; color: var(--text-muted); display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <span>✓ Minimum ₹500 per borrower</span>
+        <span>•</span>
+        <span>✓ Monthly EMI cashflows</span>
+        <span>•</span>
+        <span>✓ Zero upfront investor fees</span>
+      </div>
+    </div>
+
+    <!-- Live Performance Stats Card -->
+    <div>
+      <div class="card" style="border: 2px solid var(--green-main); background: linear-gradient(145deg, var(--bg-surface), var(--success-subtle));">
+        <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--text-main); margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: center;">
+          <span>Lending Activity Summary</span>
+          <span class="badge badge-success">Active Marketplace</span>
+        </h3>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
+          <div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Total Capital Disbursed</div>
+            <div style="font-size: 1.6rem; font-weight: 800; color: var(--navy-main);">{{ stats.total_funded | currency }}</div>
+          </div>
+          <div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Active Loan Contracts</div>
+            <div style="font-size: 1.6rem; font-weight: 800; color: var(--text-main);">{{ stats.active_loans_count }}</div>
+          </div>
+          <div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Awaiting Funding</div>
+            <div style="font-size: 1.6rem; font-weight: 800; color: var(--green-main);">{{ stats.open_marketplace_count }} Listings</div>
+          </div>
+          <div>
+            <div style="font-size: 0.8rem; color: var(--text-muted); font-weight: 600;">Repayment Schedule</div>
+            <div style="font-size: 1.25rem; font-weight: 700; color: var(--text-main); padding-top: 0.35rem;">Monthly EMI</div>
+          </div>
+        </div>
+
+        <div style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color); font-size: 0.82rem; color: var(--text-muted);">
+          ⚠️ <em>Risk Notice: Returns depend on borrower repayments and are not guaranteed.</em>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Step-by-Step Lender Journey -->
+<section style="margin: 3.5rem 0;">
+  <div style="text-align: center; max-width: 720px; margin: 0 auto 2.5rem;">
+    <span class="badge badge-info" style="margin-bottom: 0.5rem;">Transparent Process</span>
+    <h2 style="font-size: 2.25rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.5rem;">
+      The Lender Journey on LendCircle
+    </h2>
+    <p style="color: var(--text-muted); font-size: 1rem;">
+      How individual lenders deploy capital, mitigate risks, and receive monthly cashflows.
+    </p>
+  </div>
+
+  <div class="journey-grid">
+    <div class="journey-card">
+      <div class="journey-num green">1</div>
+      <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem;">Digital Registration & KYC</h3>
+      <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5;">
+        Sign up as a Lender. Submit your PAN / Aadhaar card for platform verification. Identity verification ensures a trusted community.
+      </p>
+    </div>
+
+    <div class="journey-card">
+      <div class="journey-num green">2</div>
+      <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem;">Add Funds to Wallet</h3>
+      <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5;">
+        Deposit capital into your LendCircle digital wallet. Balances are held securely in simulated escrow and cannot go negative.
+      </p>
+    </div>
+
+    <div class="journey-card">
+      <div class="journey-num green">3</div>
+      <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem;">Select & Diversify Loans</h3>
+      <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5;">
+        Browse the Marketplace. Evaluate borrower credit scores (300–900), risk categories, and employment. Allocate small tickets across multiple loans.
+      </p>
+    </div>
+
+    <div class="journey-card">
+      <div class="journey-num green">4</div>
+      <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 0.5rem;">Monthly EMI Cashflows</h3>
+      <p style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.5;">
+        As borrowers make monthly repayments, our stored procedure automatically distributes principal and interest proportionally into your wallet.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- The Power of Fractional Diversification -->
+<section class="card" style="padding: 2.25rem; margin: 3.5rem 0; border: 1px solid var(--border-color);">
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2.5rem; align-items: center;">
+    <div>
+      <span class="badge badge-success" style="margin-bottom: 0.5rem;">Risk Management</span>
+      <h2 style="font-size: 1.85rem; font-weight: 800; color: var(--text-main); margin-bottom: 1rem;">
+        Fractional Lending: The Golden Rule of Risk Mitigation
+      </h2>
+      <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.6; margin-bottom: 1.25rem;">
+        In unsecured peer lending, default risk is minimized through diversification. Rather than lending ₹50,000 to one borrower, LendCircle lets you lend ₹1,000 to 50 different verified borrowers.
+      </p>
+      <ul style="list-style: none; font-size: 0.92rem; line-height: 1.8;">
+        <li><span style="color: var(--green-main); font-weight: 800;">✓</span> <strong>Single-Borrower Cap:</strong> No single borrower holds more than a small fraction of your portfolio.</li>
+        <li><span style="color: var(--green-main); font-weight: 800;">✓</span> <strong>Smoother Returns:</strong> Occasional delays from one borrower are offset by the remaining 49 on-time payments.</li>
+        <li><span style="color: var(--green-main); font-weight: 800;">✓</span> <strong>Compounding Yields:</strong> Reinvest monthly EMI credits back into fresh loans.</li>
+      </ul>
+    </div>
+
+    <div style="background-color: var(--bg-subtle); padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--border-color);">
+      <h4 style="font-size: 1rem; font-weight: 700; color: var(--navy-main); margin-bottom: 1rem;">
+        Diversification Simulation (Example ₹20,000 Portfolio)
+      </h4>
+      <div style="display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.88rem;">
+        <div style="display: flex; justify-content: space-between; padding: 0.5rem; background: var(--bg-surface); border-radius: 4px;">
+          <span>Borrower A (Score 780 · Low Risk)</span>
+          <strong style="color: var(--green-main);">₹2,000 (10%)</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 0.5rem; background: var(--bg-surface); border-radius: 4px;">
+          <span>Borrower B (Score 740 · Moderate Risk)</span>
+          <strong style="color: var(--green-main);">₹2,000 (10%)</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; padding: 0.5rem; background: var(--bg-surface); border-radius: 4px;">
+          <span>Borrower C to J (8 distinct loans)</span>
+          <strong style="color: var(--green-main);">₹16,000 (80%)</strong>
+        </div>
+      </div>
+      <div style="margin-top: 1rem; font-size: 0.8rem; color: var(--text-muted); line-height: 1.4;">
+        If 1 borrower defaults completely, 90% of your principal remains safe and continues earning interest.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Transparent Fee & Risk Schedule -->
+<section style="margin: 3.5rem 0;">
+  <div style="text-align: center; max-width: 720px; margin: 0 auto 2rem;">
+    <span class="badge badge-info" style="margin-bottom: 0.5rem;">Zero Hidden Charges</span>
+    <h2 style="font-size: 2rem; font-weight: 800; color: var(--text-main); margin-bottom: 0.5rem;">
+      Transparent Fee & Risk Disclosures
+    </h2>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">
+      We believe in 100% upfront transparency. No hidden charges, no exaggerated claims.
+    </p>
+  </div>
+
+  <div class="card" style="padding: 1.5rem;">
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Service / Component</th>
+            <th>Lender Fee</th>
+            <th>Explanation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Lender Registration</strong></td>
+            <td><span class="badge badge-success">₹0 Free</span></td>
+            <td>No registration or annual membership charge.</td>
+          </tr>
+          <tr>
+            <td><strong>Wallet Deposits & Withdrawals</strong></td>
+            <td><span class="badge badge-success">₹0 Free</span></td>
+            <td>Instant simulated wallet deposits and withdrawals.</td>
+          </tr>
+          <tr>
+            <td><strong>Platform Commission on Returns</strong></td>
+            <td><span class="badge badge-success">0%</span></td>
+            <td>Lenders receive 100% of the interest paid by borrowers.</td>
+          </tr>
+          <tr>
+            <td><strong>Borrower Late Penalty Sharing</strong></td>
+            <td><span class="badge badge-info">Distributed</span></td>
+            <td>Late payment penalties (2%) paid by borrowers are distributed proportionally to lenders.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Explicit Risk Warning Banner -->
+    <div class="notice-box warning" style="margin-top: 1.5rem;">
+      <h4 style="font-size: 0.95rem; font-weight: 800; color: var(--warning-text); margin-bottom: 0.35rem;">
+        ⚠️ Risk & Non-Guarantee Statement
+      </h4>
+      <p style="font-size: 0.85rem; color: var(--warning-text); line-height: 1.5; margin: 0;">
+        P2P lending does not provide guaranteed returns. Loan performance depends entirely on borrower repayment capacity and economic conditions. LendCircle enforces credit scoring, risk categorization, and overdue supervision, but cannot guarantee recovery of all principal. Never lend money that you cannot afford to have delayed or at risk.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- Call to Action -->
+<section style="background: linear-gradient(135deg, var(--navy-dark), var(--navy-main)); border-radius: var(--radius-lg); padding: 3rem 2rem; text-align: center; color: #ffffff; margin-bottom: 2rem;">
+  <h2 style="font-size: 2.25rem; font-weight: 800; margin-bottom: 1rem; color: #ffffff;">
+    Ready to Build a Diversified Lending Portfolio?
+  </h2>
+  <p style="font-size: 1.05rem; opacity: 0.9; max-width: 620px; margin: 0 auto 2rem;">
+    Join individual lenders across India. Complete identity verification and fund your first loan request in small fractions today.
+  </p>
+  <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
+    <a href="{{ url_for('auth.register') }}" class="btn btn-pill-signup" style="padding: 0.85rem 2.25rem; font-size: 1.05rem;">
+      Create Lender Account
+    </a>
+    <a href="{{ url_for('main.blog_post', slug='lender-checklist-before-lending') }}" class="btn btn-outline" style="color: #ffffff; border-color: rgba(255,255,255,0.4); padding: 0.85rem 1.75rem;">
+      Read Lender Checklist &rarr;
+    </a>
+  </div>
+</section>
+{% endblock %}

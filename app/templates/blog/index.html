@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}Blog & Financial Education Hub{% endblock %}
+
+{% block content %}
+<section class="blog-header">
+  <span class="badge badge-info" style="margin-bottom: 0.75rem;">Learning & Safety Hub</span>
+  <h1 style="font-size: 2.5rem; font-weight: 900; color: var(--text-main); margin-bottom: 1rem; letter-spacing: -0.02em;">
+    LendCircle Knowledge Center
+  </h1>
+  <p style="color: var(--text-muted); font-size: 1.1rem; line-height: 1.6;">
+    Practical guides, cost breakdowns, due diligence checklists, and safety tips for peer lenders and borrowers across India.
+  </p>
+
+  <!-- Category Filter Pills -->
+  <div style="display: flex; justify-content: center; gap: 0.6rem; margin-top: 1.5rem; flex-wrap: wrap;">
+    <a href="{{ url_for('main.blog') }}" class="btn btn-sm {% if not current_category %}btn-primary{% else %}btn-outline{% endif %}">
+      All Guides ({{ posts | length }})
+    </a>
+    <a href="{{ url_for('main.blog', category='Borrower Guide') }}" class="btn btn-sm {% if current_category == 'Borrower Guide' %}btn-primary{% else %}btn-outline{% endif %}">
+      Borrower Guides
+    </a>
+    <a href="{{ url_for('main.blog', category='Lender Guide') }}" class="btn btn-sm {% if current_category == 'Lender Guide' %}btn-primary{% else %}btn-outline{% endif %}">
+      Lender Checklists
+    </a>
+    <a href="{{ url_for('main.blog', category='Risk & Safety') }}" class="btn btn-sm {% if current_category == 'Risk & Safety' %}btn-primary{% else %}btn-outline{% endif %}">
+      Risk & Safety
+    </a>
+    <a href="{{ url_for('main.blog', category='Cost & Basics') }}" class="btn btn-sm {% if current_category == 'Cost & Basics' %}btn-primary{% else %}btn-outline{% endif %}">
+      Cost & Glossary
+    </a>
+  </div>
+</section>
+
+<!-- Blog Cards Grid -->
+<div class="blog-grid">
+  {% for post in posts %}
+    <article class="blog-card">
+      <div>
+        <div class="blog-card-meta">
+          <span class="blog-badge">{{ post.category }}</span>
+          <span class="blog-read-time">{{ post.read_time }}</span>
+        </div>
+        <div style="font-size: 2rem; margin-bottom: 0.75rem;">{{ post.icon }}</div>
+        <h2 class="blog-card-title">
+          <a href="{{ url_for('main.blog_post', slug=post.slug) }}">{{ post.title }}</a>
+        </h2>
+        <p class="blog-card-excerpt">
+          {{ post.summary }}
+        </p>
+      </div>
+
+      <div class="blog-card-footer">
+        <span style="font-size: 0.85rem; color: var(--text-muted);">LendCircle Editorial</span>
+        <a href="{{ url_for('main.blog_post', slug=post.slug) }}" style="font-weight: 700; color: var(--green-main); display: inline-flex; align-items: center; gap: 0.25rem;">
+          Read Guide &rarr;
+        </a>
+      </div>
+    </article>
+  {% endfor %}
+</div>
+
+<!-- Transparent Safety Banner -->
+<div class="notice-box">
+  <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--navy-main); margin-bottom: 0.4rem;">
+    🛡️ Responsible P2P Lending Principles
+  </h3>
+  <p style="font-size: 0.92rem; color: var(--text-muted); line-height: 1.6; margin: 0;">
+    LendCircle operates as a transparent matching technology. We encourage all participants to review credit terms, assess repayment capacities, and diversify allocations to ensure responsible financial conduct.
+  </p>
+</div>
+{% endblock %}

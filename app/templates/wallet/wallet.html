@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Digital Wallet{% endblock %}
+
+{% block content %}
+<div class="card-header" style="border:none; padding-bottom:0; margin-bottom: 1.5rem;">
+  <div>
+    <h1 style="font-size: 1.85rem; font-weight: 800;">Digital Wallet</h1>
+    <p style="color: var(--text-muted); font-size: 0.95rem;">Manage your peer lending balance, deposits, disbursements, and repayments</p>
+  </div>
+</div>
+
+<div class="metrics-grid">
+  <div class="metric-card" style="background: linear-gradient(135deg, var(--bg-surface), var(--primary-subtle)); border: 2px solid var(--primary);">
+    <div class="metric-label" style="color: var(--primary);">Available Balance</div>
+    <div class="metric-value" style="color: var(--primary);">{{ wallet.balance | currency }}</div>
+    <div class="metric-subtext">Instant funds for investments or EMI repayments</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-label">Lifetime Credits</div>
+    <div class="metric-value" style="color: var(--success);">{{ stats.total_credits | currency }}</div>
+    <div class="metric-subtext">Deposits, disbursements & returns received</div>
+  </div>
+
+  <div class="metric-card">
+    <div class="metric-label">Lifetime Debits</div>
+    <div class="metric-value" style="color: var(--danger);">{{ stats.total_debits | currency }}</div>
+    <div class="metric-subtext">Withdrawals, investments & EMI payments</div>
+  </div>
+</div>
+
+<!-- Simulated Quick Transfer Forms -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+  <!-- Add Money Form -->
+  <div class="card">
+    <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+      <span style="color: var(--success);">↓</span> Add Money (Simulated)
+    </h3>
+    <form method="POST" action="{{ url_for('wallet.deposit') }}">
+      <div class="form-group">
+        <label for="deposit-amount" class="form-label">Deposit Amount (₹)</label>
+        <input type="number" id="deposit-amount" name="amount" class="form-control" placeholder="e.g. 25000" min="100" max="1000000" step="100" required>
+        <small class="form-text">Simulates instant transfer from your linked bank account or UPI.</small>
+      </div>
+      <button type="submit" class="btn btn-success btn-block">Add Funds to Wallet</button>
+    </form>
+  </div>
+
+  <!-- Withdraw Money Form -->
+  <div class="card">
+    <h3 style="font-size: 1.15rem; font-weight: 700; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+      <span style="color: var(--danger);">↑</span> Withdraw Funds (Simulated)
+    </h3>
+    <form method="POST" action="{{ url_for('wallet.withdraw') }}">
+      <div class="form-group">
+        <label for="withdraw-amount" class="form-label">Withdrawal Amount (₹)</label>
+        <input type="number" id="withdraw-amount" name="amount" class="form-control" placeholder="e.g. 10000" min="100" max="{{ wallet.balance }}" step="100" required>
+        <small class="form-text">Available to withdraw: {{ wallet.balance | currency }}</small>
+      </div>
+      <button type="submit" class="btn btn-outline btn-block">Withdraw to Bank</button>
+    </form>
+  </div>
+</div>
+
+<!-- Ledger Transactions Table -->
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Transaction Ledger</h3>
+    <!-- Type Filter -->
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+      <a href="{{ url_for('wallet.index') }}" class="btn btn-sm {% if not current_filter %}btn-primary{% else %}btn-outline{% endif %}">All</a>
+      <a href="{{ url_for('wallet.index', type='Deposit') }}" class="btn btn-sm {% if current_filter == 'Deposit' %}btn-primary{% else %}btn-outline{% endif %}">Deposits</a>
+      <a href="{{ url_for('wallet.index', type='Disbursement') }}" class="btn btn-sm {% if current_filter == 'Disbursement' %}btn-primary{% else %}btn-outline{% endif %}">Disbursements</a>
+      <a href="{{ url_for('wallet.index', type='Investment') }}" class="btn btn-sm {% if current_filter == 'Investment' %}btn-primary{% else %}btn-outline{% endif %}">Investments</a>
+      <a href="{{ url_for('wallet.index', type='EMI Payment') }}" class="btn btn-sm {% if current_filter == 'EMI Payment' %}btn-primary{% else %}btn-outline{% endif %}">EMIs</a>
+      <a href="{{ url_for('wallet.index', type='Repayment Received') }}" class="btn btn-sm {% if current_filter == 'Repayment Received' %}btn-primary{% else %}btn-outline{% endif %}">Returns</a>
+    </div>
+  </div>
+
+  {% if transactions %}
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Date & Time</th>
+            <th>Type</th>
+            <th>Description</th>
+            <th>Reference</th>
+            <th>Amount</th>
+            <th>Balance After</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for tx in transactions %}
+            <tr>
+              <td style="white-space: nowrap; font-size: 0.85rem; color: var(--text-muted);">
+                {{ tx.created_at | date('%d %b %Y, %H:%M') }}
+              </td>
+              <td>
+                <span class="badge {% if tx.direction == 'Credit' %}badge-success{% else %}badge-danger{% endif %}">
+                  {{ tx.type }}
+                </span>
+              </td>
+              <td style="max-width: 280px;">{{ tx.description }}</td>
+              <td><code style="font-size: 0.8rem;">{{ tx.reference_id or '-' }}</code></td>
+              <td style="font-weight: 700; white-space: nowrap; {% if tx.direction == 'Credit' %}color: var(--success);{% else %}color: var(--danger);{% endif %}">
+                {% if tx.direction == 'Credit' %}+{% else %}-{% endif %}{{ tx.amount | currency }}
+              </td>
+              <td style="font-weight: 600; color: var(--text-main);">
+                {{ tx.balance_after | currency }}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div style="text-align: center; padding: 2.5rem 0; color: var(--text-muted);">
+      <p style="font-size: 1.1rem; margin-bottom: 0.5rem;">No transactions recorded yet.</p>
+      <p style="font-size: 0.9rem;">Deposit money or fund a loan to see activity on your ledger.</p>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

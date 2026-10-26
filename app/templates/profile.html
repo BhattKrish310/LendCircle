@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}User Profile{% endblock %}
+
+{% block content %}
+<div style="max-width: 680px; margin: 1.5rem auto;">
+  <div class="card">
+    <div class="card-header">
+      <h2 class="card-title">Profile Settings</h2>
+      <span class="badge badge-{{ user.role }}">{{ user.role | upper }}</span>
+    </div>
+
+    <form method="POST" action="{{ url_for('main.profile') }}">
+      <div class="form-group">
+        <label for="email" class="form-label">Email Address (Read-only)</label>
+        <input type="email" id="email" class="form-control" value="{{ user.email }}" disabled style="background-color: var(--bg-subtle);">
+        <small class="form-text">Primary account identifier cannot be altered.</small>
+      </div>
+
+      <div class="form-group">
+        <label for="full_name" class="form-label">Full Name</label>
+        <input type="text" id="full_name" name="full_name" class="form-control" value="{{ user.full_name }}" required>
+      </div>
+
+      <div class="form-group">
+        <label for="phone" class="form-label">Phone Number</label>
+        <input type="text" id="phone" name="phone" class="form-control" value="{{ user.phone }}" required>
+      </div>
+
+      {% if user.role == 'borrower' and borrower_profile %}
+        <div style="border-top: 1px solid var(--border-color); margin: 1.5rem 0 1rem; padding-top: 1rem;">
+          <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem;">Financial & Underwriting Profile</h3>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div class="form-group">
+              <label for="annual_income" class="form-label">Reported Annual Income (₹)</label>
+              <input type="number" id="annual_income" name="annual_income" class="form-control" value="{{ borrower_profile.annual_income }}" min="0" step="1000" required>
+            </div>
+
+            <div class="form-group">
+              <label for="employment_status" class="form-label">Employment Status</label>
+              <select id="employment_status" name="employment_status" class="form-select">
+                {% for st in ['Salaried', 'Self-Employed', 'Business', 'Freelancer', 'Unemployed'] %}
+                  <option value="{{ st }}" {% if borrower_profile.employment_status == st %}selected{% endif %}>{{ st }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="address" class="form-label">Residential Address</label>
+            <textarea id="address" name="address" class="form-control" rows="2">{{ borrower_profile.address or '' }}</textarea>
+          </div>
+
+          <div style="background-color: var(--bg-subtle); padding: 0.85rem; border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center;">
+            <span>Current Credit Score: <strong>{{ borrower_profile.credit_score }}</strong></span>
+            <span class="badge badge-{{ borrower_profile.risk_category | lower }}">Risk: {{ borrower_profile.risk_category }}</span>
+          </div>
+        </div>
+      {% elif user.role == 'lender' and lender_profile %}
+        <div style="border-top: 1px solid var(--border-color); margin: 1.5rem 0 1rem; padding-top: 1rem;">
+          <h3 style="font-size: 1.05rem; font-weight: 700; margin-bottom: 1rem;">Lender Portfolio Settings</h3>
+
+          <div class="form-group">
+            <label for="investment_limit" class="form-label">Maximum Investment Limit (₹)</label>
+            <input type="number" id="investment_limit" name="investment_limit" class="form-control" value="{{ lender_profile.investment_limit }}" min="10000" step="5000" required>
+            <small class="form-text">Self-imposed portfolio risk exposure cap.</small>
+          </div>
+        </div>
+      {% endif %}
+
+      <button type="submit" class="btn btn-primary" style="margin-top: 1rem;">
+        Save Changes
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}
